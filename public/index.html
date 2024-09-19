@@ -4,63 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>멀티플레이 지렁이 게임</title>
-    <!-- 화면 확대 방지 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-
-        #gameCanvas {
-            background: #f0f0f0;
-            display: block;
-            margin: 0 auto;
-            width: 100%;
-            height: 100vh;
-            touch-action: none; /* 터치 동작 비활성화 */
-        }
-
-        #login {
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        #nameInput {
-            font-size: 1.2em;
-            padding: 10px;
-        }
-
-        /* 스코어보드 스타일 */
-        #scoreBoard {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 1em;
-            color: black;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            max-width: 90%;
-        }
-
-        #scoreBoard h2 {
-            margin: 0;
-            margin-bottom: 5px;
-            font-size: 1.2em;
-            text-align: center;
-        }
-
-        #scoreBoard ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #scoreBoard li {
-            margin-bottom: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -72,170 +17,29 @@
 
     <canvas id="gameCanvas" style="display: none;"></canvas>
 
-    <!-- 스코어보드 -->
+    <!-- 상위 3위까지만 보여주는 스코어보드 -->
     <div id="scoreBoard" style="display: none;">
-        <h2>스코어보드</h2>
+        <h2>스코어보드 (상위 3명)</h2>
         <ul id="rankingList"></ul>
     </div>
 
+    <!-- 내 스코어 -->
+    <div id="myScore" style="display: none;">
+        <h2>내 스코어: <span id="currentScore">0</span></h2>
+    </div>
+
+    <div id="controls" style="display: none;">
+        <button id="leftButton">◀</button>
+        <button id="rightButton">▶</button>
+    </div>
+    <!-- 채팅창 -->
+    <div id="chatContainer" style="display: none;">
+        <ul id="chatMessages"></ul>
+        <input type="text" id="chatInput" placeholder="메시지를 입력하세요..." />
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        const canvas = document.getElementById('gameCanvas');
-        const context = canvas.getContext('2d');
-        const nameInput = document.getElementById('nameInput');
-        const startButton = document.getElementById('startButton');
-        const loginDiv = document.getElementById('login');
-        const scoreBoard = document.getElementById('scoreBoard');
-        const rankingList = document.getElementById('rankingList');
-
-        let players = {};
-        let myId;
-        let myScore = 0;
-        let scale, offsetX, offsetY;
-
-        // 이벤트 핸들러는 여기서 한 번만 등록
-        socket.on('state', (state) => {
-            players = state.players;
-            const apples = state.apples;
-            const ranking = state.ranking;
-
-            // 스코어보드 업데이트
-            rankingList.innerHTML = '';
-            for (let player of ranking) {
-                let li = document.createElement('li');
-                li.textContent = `${player.rank}위: ${player.name} - ${player.score}점`;
-                rankingList.appendChild(li);
-            }
-
-            // 화면 갱신
-            drawGame(players, apples);
-        });
-
-        startButton.addEventListener('click', () => {
-            const name = nameInput.value.trim();
-            if (name) {
-                socket.emit('newPlayer', { name: name });
-                loginDiv.style.display = 'none';
-                canvas.style.display = 'block';
-                scoreBoard.style.display = 'block';
-            } else {
-                alert('이름을 입력해주세요.');
-            }
-        });
-
-        // 터치 및 클릭 이벤트 처리
-        canvas.addEventListener('touchstart', handleInput, false);
-        canvas.addEventListener('mousedown', handleInput, false);
-
-        function handleInput(event) {
-            event.preventDefault(); // 기본 동작 방지
-
-            let x, y;
-            if (event.type === 'touchstart') {
-                x = event.touches[0].clientX;
-                y = event.touches[0].clientY;
-            } else {
-                x = event.clientX;
-                y = event.clientY;
-            }
-
-            const rect = canvas.getBoundingClientRect();
-            const canvasX = x - rect.left;
-            const canvasY = y - rect.top;
-
-            const gameX = (canvasX - offsetX) / scale;
-            const gameY = (canvasY - offsetY) / scale;
-
-            const player = players[socket.id];
-            if (player) {
-                const dx = gameX - player.x;
-                const dy = gameY - player.y;
-
-                const angle = Math.atan2(dy, dx); // 라디안 단위의 각도
-
-                // 각도를 4방향으로 변환
-                let newDirection;
-                if (angle >= -Math.PI / 4 && angle < Math.PI / 4) {
-                    newDirection = 'right';
-                } else if (angle >= Math.PI / 4 && angle < (3 * Math.PI) / 4) {
-                    newDirection = 'down';
-                } else if (angle >= -(3 * Math.PI) / 4 && angle < -Math.PI / 4) {
-                    newDirection = 'up';
-                } else {
-                    newDirection = 'left';
-                }
-
-                // 반대 방향으로는 이동하지 않도록 체크
-                const oppositeDirections = {
-                    'up': 'down',
-                    'down': 'up',
-                    'left': 'right',
-                    'right': 'left'
-                };
-
-                if (newDirection !== oppositeDirections[player.direction]) {
-                    socket.emit('changeDirection', { direction: newDirection });
-                }
-            }
-        }
-
-        // 화면 크기 조정
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // 게임 그리기 함수
-        function drawGame(players, apples) {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-
-            const scaleX = canvas.width / 800;
-            const scaleY = canvas.height / 600;
-            scale = Math.min(scaleX, scaleY);
-
-            offsetX = (canvas.width - 800 * scale) / 2;
-            offsetY = (canvas.height - 600 * scale) / 2;
-
-            // 게임 영역 테두리 그리기
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeRect(offsetX, offsetY, 800 * scale, 600 * scale);
-
-            // 사과 그리기
-            context.fillStyle = 'red';
-            for (let apple of apples) {
-                context.beginPath();
-                context.arc(offsetX + (apple.x + 10) * scale, offsetY + (apple.y + 10) * scale, 10 * scale, 0, 2 * Math.PI);
-                context.fill();
-            }
-
-            // 지렁이 그리기
-            for (let id in players) {
-                const player = players[id];
-                context.fillStyle = player.color;
-
-                // 꼬리 그리기
-                for (let segment of player.tail) {
-                    context.beginPath();
-                    context.arc(offsetX + (segment.x + 10) * scale, offsetY + (segment.y + 10) * scale, 10 * scale, 0, 2 * Math.PI);
-                    context.fill();
-                }
-
-                // 머리 그리기
-                context.beginPath();
-                context.arc(offsetX + (player.x + 10) * scale, offsetY + (player.y + 10) * scale, 10 * scale, 0, 2 * Math.PI);
-                context.fill();
-
-                // 이름 표시
-                context.fillStyle = id === socket.id ? 'green' : 'black';
-                context.font = `${12 * scale}px Arial`;
-                context.fillText(player.name, offsetX + player.x * scale, offsetY + (player.y - 5) * scale);
-            }
-        }
-    </script>
+    <script src="game.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,133 @@
+:root {
+  --button-size: 50px;
+  --button-margin: 10px;
+  --button-opacity: 0.7;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  background: #f0f0f0;
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  height: calc(100vh - 150px); /* Adjust for chat and controls */
+  touch-action: none;
+}
+
+#login {
+  text-align: center;
+  margin-top: 50px;
+}
+
+#nameInput {
+  font-size: 1.2em;
+  padding: 10px;
+}
+
+/* 스코어보드 스타일 */
+#scoreBoard {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1em;
+  color: black;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+  max-width: 90%;
+}
+
+#scoreBoard h2 {
+  margin: 0;
+  margin-bottom: 5px;
+  font-size: 1.2em;
+  text-align: center;
+}
+
+#scoreBoard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#scoreBoard li {
+  margin-bottom: 5px;
+}
+
+/* 내 스코어 */
+#myScore {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1em;
+  color: black;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+#myScore h2 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+#controls {
+  position: absolute;
+  bottom: var(--button-margin);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  opacity: var(--button-opacity);
+  z-index: 10;
+}
+
+/* 버튼 크기를 더 크게 설정 */
+#controls button {
+  width: 80px; /* 기존 크기에서 증가 */
+  height: 80px; /* 기존 크기에서 증가 */
+  font-size: 1.5em; /* 글자 크기 조정 */
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+.horizontal-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* 채팅창 스타일 */
+#chatContainer {
+  position: absolute;
+  bottom: calc(var(--button-size) + var(--button-margin) * 2 + 20px);
+  left: 10px;
+  right: 10px;
+  height: 100px;
+  background-color: rgba(255, 255, 255, 0.8);
+  overflow-y: auto;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+#chatMessages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#chatInput {
+  width: calc(100% - 10px);
+  padding: 5px;
+  border: none;
+  border-top: 1px solid #ccc;
+  outline: none;
+  font-size: 1em;
+}
