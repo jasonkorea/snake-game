@@ -161,6 +161,7 @@ setInterval(() => {
                     player.size += 1;
                     apples.splice(i, 1);
                     apples.push(getRandomPosition());
+                    io.to(player.id).emit('appleEaten');
                     break;
                 }
             }
@@ -223,6 +224,8 @@ setInterval(() => {
 
                                     // 점수 변화 없음
                                 }
+                                io.to(player1.id).emit('collision');
+                                io.to(player2.id).emit('collision');
                                 break;
                             }
                         }

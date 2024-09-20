@@ -57,6 +57,20 @@ socket.on('chatHistory', (messages) => {
     }
 });
 
+// 서버로부터 충돌 이벤트를 받으면 진동 발생
+socket.on('collision', () => {
+    if (navigator.vibrate) {
+        navigator.vibrate(300); // 200ms 진동
+    }
+});
+
+// 서버로부터 사과를 먹었다는 이벤트를 받으면 진동 발생
+socket.on('appleEaten', () => {
+    if (navigator.vibrate) {
+        navigator.vibrate([50, 50, 50]); // 100ms 진동, 50ms 대기, 100ms 진동
+    }
+});
+
 startButton.addEventListener('click', () => {
     const name = nameInput.value.trim();
     if (name) {
@@ -73,23 +87,70 @@ startButton.addEventListener('click', () => {
 });
 
 // 컨트롤 버튼 이벤트 처리
-leftButton.addEventListener('mousedown', () => {
-    socket.emit('changeDirection', { rotation: 'left' });
-});
-rightButton.addEventListener('mousedown', () => {
-    socket.emit('changeDirection', { rotation: 'right' });
+leftButton.addEventListener('mousedown', (e) => {
+    if (e.isTrusted) { // 터치 이벤트가 아닌 경우에만 실행
+        socket.emit('changeDirection', { rotation: 'left' });
+
+        if (navigator.vibrate) {
+            navigator.vibrate(50); // 50ms 진동
+        }
+    }
 });
 
-// 모바일 터치 대응
+rightButton.addEventListener('mousedown', (e) => {
+    if (e.isTrusted) { // 터치 이벤트가 아닌 경우에만 실행
+        socket.emit('changeDirection', { rotation: 'right' });
+
+        if (navigator.vibrate) {
+            navigator.vibrate(50); // 50ms 진동
+        }
+    }
+});
+
+// 터치 이벤트 추가
 leftButton.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // 기본 터치 동작 방지
+    e.preventDefault(); // 터치 이벤트의 기본 동작 방지
     socket.emit('changeDirection', { rotation: 'left' });
-});
-rightButton.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // 기본 터치 동작 방지
-    socket.emit('changeDirection', { rotation: 'right' });
+
+    if (navigator.vibrate) {
+        navigator.vibrate(50); // 50ms 진동
+    }
 });
 
+rightButton.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // 터치 이벤트의 기본 동작 방지
+    socket.emit('changeDirection', { rotation: 'right' });
+
+    if (navigator.vibrate) {
+        navigator.vibrate(50); // 50ms 진동
+    }
+});
+
+// 터치가 끝났을 때 마우스 이벤트 방지
+leftButton.addEventListener('touchend', (e) => {
+    e.preventDefault(); // 터치 이벤트의 기본 동작 방지
+});
+
+rightButton.addEventListener('touchend', (e) => {
+    e.preventDefault(); // 터치 이벤트의 기본 동작 방지
+});
+
+
+function changeDirection(newDirection) {
+    const player = players[socket.id];
+    if (player) {
+        const oppositeDirections = {
+            'up': 'down',
+            'down': 'up',
+            'left': 'right',
+            'right': 'left'
+        };
+
+        if (newDirection !== oppositeDirections[player.direction]) {
+            socket.emit('changeDirection', { direction: newDirection });
+        }
+    }
+}
 
 // 채팅 메시지 전송
 chatInput.addEventListener('keydown', (e) => {
@@ -163,9 +224,12 @@ function drawGame(players, apples) {
         drawTriangle(player);
 
         // 이름 표시
+        context.save();
+        context.setTransform(1, 0, 0, 1, 0, 0); // 스케일을 초기화
         context.fillStyle = id === socket.id ? 'green' : 'black';
         context.font = `${12 * scale}px Arial`;
         context.fillText(player.name, offsetX + player.x * scale, offsetY + (player.y - 5) * scale);
+        context.restore();
     }
 }
 
