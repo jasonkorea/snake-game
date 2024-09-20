@@ -1,0 +1,7 @@
+{
+  
+    "watch": ["public", "."],
+    "ext": "js,json, css, html",
+    "ignore": ["node_"],
+    "exec": "node server.js"
+  }
