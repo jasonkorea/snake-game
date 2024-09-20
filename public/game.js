@@ -89,21 +89,7 @@ rightButton.addEventListener('touchstart', (e) => {
     e.preventDefault(); // 기본 터치 동작 방지
     socket.emit('changeDirection', { rotation: 'right' });
 });
-function changeDirection(newDirection) {
-    const player = players[socket.id];
-    if (player) {
-        const oppositeDirections = {
-            'up': 'down',
-            'down': 'up',
-            'left': 'right',
-            'right': 'left'
-        };
 
-        if (newDirection !== oppositeDirections[player.direction]) {
-            socket.emit('changeDirection', { direction: newDirection });
-        }
-    }
-}
 
 // 채팅 메시지 전송
 chatInput.addEventListener('keydown', (e) => {
