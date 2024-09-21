@@ -198,6 +198,7 @@ setInterval(() => {
                     let newPos = getRandomPosition();
                     player.x = newPos.x;
                     player.y = newPos.y;
+                    io.to(player.id).emit('collision');
                     break;
                 }
             }
