@@ -247,15 +247,16 @@ function drawGame(players, apples) {
             context.fill();
         }
 
+        // 머리 앞의 삼각형 (입 및 방향 표시)
+        context.fillStyle = 'orange';
+        drawTriangle(player);
+
         // 지렁이 머리 그리기
         context.fillStyle = 'gold';
         context.beginPath();
         context.arc(offsetX + (player.x + 10) * scale, offsetY + (player.y + 10) * scale, 10 * scale, 0, 2 * Math.PI);
         context.fill();
 
-        // 머리 앞의 삼각형 (입 및 방향 표시)
-        context.fillStyle = 'red';
-        drawTriangle(player);
 
         // 이름 표시
         context.save();
