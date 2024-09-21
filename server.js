@@ -22,6 +22,47 @@ function getRandomPosition() {
     };
 }
 
+function getSafeRandomPosition() {
+    let position;
+    let isOccupied;
+    do {
+        position = getRandomPosition();
+        isOccupied = false;
+
+        // 다른 지렁이들과 충돌 여부 확인
+        for (let id in players) {
+            let player = players[id];
+
+            // 지렁이의 머리와 충돌 확인
+            if (player.x === position.x && player.y === position.y) {
+                isOccupied = true;
+                break;
+            }
+
+            // 지렁이의 꼬리와 충돌 확인
+            for (let segment of player.tail) {
+                if (segment.x === position.x && segment.y === position.y) {
+                    isOccupied = true;
+                    break;
+                }
+            }
+
+            if (isOccupied) break;
+        }
+
+        // 사과와의 충돌 여부 확인
+        for (let apple of apples) {
+            if (apple.x === position.x && apple.y === position.y) {
+                isOccupied = true;
+                break;
+            }
+        }
+
+    } while (isOccupied);
+    return position;
+}
+
+
 // 임의의 색상 생성 함수
 function getRandomColor() {
     const letters = '0123456789ABCDEF';
@@ -34,11 +75,18 @@ function getRandomColor() {
 
 // 초기 사과 생성
 for (let i = 0; i < appleCount; i++) {
-    apples.push(getRandomPosition());
+    let position = getSafeRandomPosition();
+    let appleType = Math.random() < 0.1 ? 'golden' : 'normal'; // 10% 확률로 황금 사과 생성
+    apples.push({
+        x: position.x,
+        y: position.y,
+        type: appleType
+    });
 }
 
+
 io.on('connection', (socket) => {
-    console.log('사용자 연결됨:', socket.id);
+    console.log('사용자 연결됨:', socket.id, new Date().toLocaleString());
 
     // 기존 채팅 메시지 전송
     socket.emit('chatHistory', chatMessages);
@@ -88,7 +136,7 @@ io.on('connection', (socket) => {
             pastPlayers[socket.id] = players[socket.id]; // 이전 플레이어로 저장
             delete players[socket.id];
         }
-        console.log('사용자 연결 해제됨:', socket.id);
+        console.log('사용자 연결 해제됨:', socket.id, new Date().toLocaleString());
     });
 });
 
@@ -158,9 +206,23 @@ setInterval(() => {
             for (let i = 0; i < apples.length; i++) {
                 let apple = apples[i];
                 if (player.x === apple.x && player.y === apple.y) {
-                    player.size += 1;
+                    if (apple.type === 'normal') {
+                        player.size += 1;
+                        player.score += 10;
+                    } else if (apple.type === 'golden') {
+                        player.size += 5;         // 황금 사과는 크기 5 증가
+                        player.score += 50;       // 추가 점수 50점
+                    }
                     apples.splice(i, 1);
-                    apples.push(getRandomPosition());
+                
+                    // 새로운 사과 생성
+                    let position = getSafeRandomPosition();
+                    let appleType = Math.random() < 0.1 ? 'golden' : 'normal';
+                    apples.push({
+                        x: position.x,
+                        y: position.y,
+                        type: appleType
+                    });
                     io.to(player.id).emit('appleEaten');
                     break;
                 }
@@ -183,7 +245,7 @@ setInterval(() => {
                                     // 짧은 지렁이 소멸
                                     player2.size = player2.initialSize;
                                     player2.tail = [];
-                                    let newPos = getRandomPosition();
+                                    let newPos = getSafeRandomPosition();
                                     player2.x = newPos.x;
                                     player2.y = newPos.y;
                                     player1.score += 10;
@@ -199,7 +261,7 @@ setInterval(() => {
                                     // 짧은 지렁이 소멸
                                     player1.size = player1.initialSize;
                                     player1.tail = [];
-                                    let newPos = getRandomPosition();
+                                    let newPos = getSafeRandomPosition();
                                     player1.x = newPos.x;
                                     player1.y = newPos.y;
                                     player2.score += 10;

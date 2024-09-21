@@ -159,9 +159,11 @@ chatInput.addEventListener('keydown', (e) => {
         if (message) {
             socket.emit('chatMessage', { message: message });
             chatInput.value = '';
+            chatInput.blur(); // 채팅 전송 후 포커스 제거
         }
     }
 });
+
 
 function appendChatMessage(name, message) {
     const li = document.createElement('li');
@@ -194,9 +196,13 @@ function drawGame(players, apples) {
     context.strokeRect(offsetX, offsetY, 800 * scale, 600 * scale);
 
     // 사과 그리기
-    context.fillStyle = 'red';
     for (let apple of apples) {
         context.beginPath();
+        if (apple.type === 'normal') {
+            context.fillStyle = 'red';
+        } else if (apple.type === 'golden') {
+            context.fillStyle = 'gold';
+        }
         context.arc(offsetX + (apple.x + 10) * scale, offsetY + (apple.y + 10) * scale, 10 * scale, 0, 2 * Math.PI);
         context.fill();
     }
@@ -220,7 +226,7 @@ function drawGame(players, apples) {
         context.fill();
 
         // 머리 앞의 삼각형 (입 및 방향 표시)
-        context.fillStyle = 'black';
+        context.fillStyle = 'red';
         drawTriangle(player);
 
         // 이름 표시
