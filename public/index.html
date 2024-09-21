@@ -11,8 +11,10 @@
 <body>
     <div id="login">
         <h1>지렁이 게임</h1>
-        <input type="text" id="nameInput" placeholder="사용자 이름을 입력하세요" />
-        <button id="startButton">게임 시작</button>
+        <form id="loginForm" onsubmit="return false;">
+            <input type="text" id="nameInput" placeholder="사용자 이름을 입력하세요" />
+            <button id="startButton">게임 시작</button>
+        </form>
     </div>
 
     <canvas id="gameCanvas" style="display: none;"></canvas>

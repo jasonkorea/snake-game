@@ -22,9 +22,36 @@ let myId;
 let myScoreValue = 0;
 let scale, offsetX, offsetY;
 
+socket.on('disconnect', () => {
+    console.log('서버와의 연결이 끊겼습니다. 5초 후 재접속을 시도합니다.');
+
+    // 게임 화면을 비우기
+    canvas.style.display = 'none';
+    scoreBoard.style.display = 'none';
+    controls.style.display = 'none';
+    chatContainer.style.display = 'none';
+    myScore.style.display = 'none';
+
+
+    // 서버와 연결이 끊겼다는 메시지 출력
+    const disconnectMessage = document.createElement('div');
+    disconnectMessage.id = 'disconnectMessage';
+    disconnectMessage.style.position = 'fixed';
+    disconnectMessage.style.top = '50%';
+    disconnectMessage.style.left = '50%';
+    disconnectMessage.style.transform = 'translate(-50%, -50%)';
+    disconnectMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    disconnectMessage.style.color = 'white';
+    disconnectMessage.style.padding = '20px';
+    disconnectMessage.style.fontSize = '1.5em';
+    disconnectMessage.textContent = '서버와의 연결이 끊어졌습니다.';
+    document.body.appendChild(disconnectMessage);
+});
+
 // 이벤트 핸들러는 여기서 한 번만 등록
 socket.on('state', (state) => {
     players = state.players;
+    aiSnakes = state.aiSnakes;  // AI 지렁이 추가
     const apples = state.apples;
     const ranking = state.ranking;
 
@@ -45,6 +72,7 @@ socket.on('state', (state) => {
     // 화면 갱신
     drawGame(players, apples);
 });
+
 
 socket.on('chatMessage', (data) => {
     appendChatMessage(data.name, data.message);
@@ -71,7 +99,7 @@ socket.on('appleEaten', () => {
     }
 });
 
-startButton.addEventListener('click', () => {
+document.getElementById('loginForm').addEventListener('submit', () => {
     const name = nameInput.value.trim();
     if (name) {
         socket.emit('newPlayer', { name: name });
@@ -237,6 +265,35 @@ function drawGame(players, apples) {
         context.fillText(player.name, offsetX + player.x * scale, offsetY + (player.y - 5) * scale);
         context.restore();
     }
+
+    // AI 지렁이 그리기
+    for (let id in aiSnakes) {
+        drawAISnake(aiSnakes[id]);
+    }
+}
+
+// AI 지렁이 그리기 함수
+function drawAISnake(ai) {
+    context.fillStyle = 'black';
+    context.strokeStyle = 'black';
+
+    // AI 지렁이 꼬리 그리기 (빈 네모)
+    for (let segment of ai.tail) {
+        context.strokeRect(
+            offsetX + segment.x * scale,
+            offsetY + segment.y * scale,
+            20 * scale,
+            20 * scale
+        );
+    }
+
+    // AI 지렁이 머리 그리기 (검은색 네모)
+    context.strokeRect(
+        offsetX + ai.x * scale,
+        offsetY + ai.y * scale,
+        20 * scale,
+        20 * scale
+    );
 }
 
 // 지렁이의 머리 전방에 삼각형(입) 그리기
